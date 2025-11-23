@@ -4,6 +4,7 @@ import sys
 from dotenv import dotenv_values
 from src.logging.app_logger import AppLogger
 
+
 class Config(object):
     config = None
 

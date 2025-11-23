@@ -6,7 +6,9 @@ import sys
 import time
 import urllib.request
 from collections import Counter
-from config import Config
+#from config import Config
+from src.config.config import Config
+from src.logging.app_logger import AppLogger
 
 class App(object):
 
@@ -18,6 +20,7 @@ class App(object):
         #App.consecutive_duplicates(word)
         #sys.exit(0)
         #############################
+        logger = AppLogger.set_up_logger("app.log")
         config = Config.set_up_config(".env")
 
         items = 0
@@ -28,7 +31,7 @@ class App(object):
                 #print (line.strip())
                 dictionary.add(line.lower().strip())
 
-        print (str(items) + " dictionary items")
+        logger.info(str(items) + " dictionary items")
 
         #N = 4 #  example: value 4 means it's 6-letter word we are looking for (we know the 1st 2 letters)
         # = 4
