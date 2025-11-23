@@ -2,6 +2,7 @@ import os
 import itertools
 from src.config.config import Config
 from src.logging.app_logger import AppLogger
+from src.service.scraper import Scraper
 from src.service.word_lookup import WordLookup
 
 class App(object):
@@ -12,15 +13,24 @@ class App(object):
         logger = AppLogger.set_up_logger("app.log")
         config = Config.set_up_config(".env")
 
+        #scraper = Scraper(config)
+        data = Scraper(config).scrape()
+
         word_config = {
             "word_file_path" : os.path.join(config.get("input.data.dir"), config.get("word.file")),
-            "known_two": config.get("known_two"),
-            "middle": config.get("middle"),
-            "letters":  [letter.strip() for letter in config.get("letters").split(",")],
+            "pairs": data["pairs"],
+            "middle": data["middle"],
+            "letters":  data["letters"],
             "max_word_length": int(config.get("max.word.length")) or 9
         }
 
-        WordLookup(word_config).search()
+        for k,v in word_config.items():
+            logger.info(k + " -> " + str(v))
+
+        answers = WordLookup(word_config).search()
+        # for pair, answer_list in answers.items():
+        #     for answer in answer_list:
+        #         logger.info(pair + " -> " + answer)
 
 
 

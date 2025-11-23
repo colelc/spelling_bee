@@ -14,17 +14,24 @@ class WordLookup(object):
         self.logger = AppLogger.get_logger()
 
         self.word_file_path = word_config.get("word_file_path")
-        self.known_two = word_config.get("known_two")
+        self.pairs = word_config.get("pairs")
         self.middle = word_config.get("middle")
         self.letters = word_config.get("letters")
         self.max_word_length = word_config.get("max_word_length")
 
 
-    def search(self):
+    def search(self) -> dict:
+        #answers = list()
+        answers = dict()  # key=pair, value=list of words from word file
+
+        for pair in self.pairs:
+            answers[pair] = self.search_file(pair)
+
+        return answers
+
+
+    def search_file(self, known_two: str):
         answers = list()
-        #word_file = config.get("word.file")
-        #input_data_dir = config.get("input.data.dir")
-        #word_file_path = os.path.join(input_data_dir, word_file)
 
         items = 0
         dictionary = set()
@@ -34,34 +41,19 @@ class WordLookup(object):
                 #self.logger.info (line.strip())
                 dictionary.add(line.lower().strip())
 
-        self.logger.info(str(items) + " dictionary items")
-
-        #N = 4 #  example: value 4 means it's 6-letter word we are looking for (we know the 1st 2 letters)
-        # = 4
-        #known_two = "TO"
-        #known_two = config.get("known_two")
-        #middle = "M"
-        #middle = config.get("middle")
-        #letters = list({"M", "I", "T", "A", "O", "V", "N"})
-        #letters = [letter.strip() for letter in config.get("letters").split(",")]
-
-        #max_word_length = int(config.get("max.word.length")) or 9
+        #self.logger.info(str(items) + " dictionary items")
 
         self.logger.info ("letters: " + str(self.letters))
         self.logger.info ("middle: " + self.middle)
-        self.logger.info ("known_two: " + self.known_two)
+        self.logger.info ("known_two: " + known_two)
 
         for N in range(2, self.max_word_length):
-            #total_combos = 0
-            #for combo in itertools.product(letters,  repeat=N):
-            #    total_combos += 1
-
-            self.logger.info("")
+            #self.logger.info("")
             #self.logger.info(str(N) + ": TOTAL combos: " + str(total_combos))
 
             for combo in itertools.product(self.letters,  repeat=N):
                 part = "".join(combo)
-                word = self.known_two + part
+                word = known_two + part
 
                 if not word.__contains__(self.middle):
                     continue
@@ -73,6 +65,6 @@ class WordLookup(object):
 
 
         answers.sort()
-        self.logger.info(str(answers))
+        return answers
 
 
