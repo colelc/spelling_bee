@@ -1,31 +1,51 @@
 
 import json
+import os
 import itertools
 from itertools import groupby
-import sys
+import argparse
 import time
 import urllib.request
 from collections import Counter
+from src.service.scraper import Scraper
+from src.config.config import Config
+from src.logging.app_logger import AppLogger
 
 class App(object):
 
     @classmethod
     def go(cls):
-        ###########################
-        #word = "LIJJET"
-        #App.consecutive_duplicates(word)
-        #sys.exit(0)
-        #############################
+        parser = argparse.ArgumentParser()
+        parser.add_argument("--known", type=str)
+        parser.add_argument("--N", type=int)
+        args = parser.parse_args()
+
+        logger = AppLogger.set_up_logger("app.log")
+        config = Config.set_up_config(".env")
+        data = Scraper(config).scrape()
+
+        word_config = {
+            "word_file_path" : os.path.join(config.get("input.data.dir"), config.get("word.file")),
+            "pairs": data["pairs"],
+            "middle": data["middle"],
+            "letters":  data["letters"],
+            "max_word_length": int(config.get("max.word.length")) or 9
+        }
 
         endpoint = "https://api.dictionaryapi.dev/api/v2/entries/en/"  #football
 
         answers = list()
 
         #N = 4 #  example: value 4 means it's 6-letter word we are looking for (we know the 1st 2 letters)
-        N = 2
-        known_two = "PI"
-        middle = "L"
-        letters = list({"L", "T", "M", "E", "I", "N", "P"})
+        #N = 3
+        args_n = int(args.N) 
+        N = args_n - 2 if args_n > 2 else 0
+        #known_two = "OU"
+        known_two = args.known
+        #middle = "U"
+        #letters = list({"U", "N", "T", "G", "D", "R", "O"})
+        middle = word_config["middle"]
+        letters = word_config["letters"]
 
         total_combos = 0
         count = 0
@@ -43,8 +63,9 @@ class App(object):
 
         for combo in itertools.product(letters,  repeat=N):
             count += 1
-            if count % 1000 == 0:
-                App.totals_update(count, total_combos, middle_filter_count, consecutive_consonants, consecutive_identical_consonants,  consecutive_dupes, customized)
+            if count % 5000 == 0:
+                App.totals_update(count, total_combos, middle_filter_count, consecutive_consonants, consecutive_identical_consonants,  
+                                  consecutive_identical_vowels, consecutive_dupes, customized)
 
             part = "".join(combo)
             word = known_two +  part
@@ -74,7 +95,7 @@ class App(object):
                 customized += 1
                 continue
 
-            print("API call: " + word)
+            #print("API call: " + word)
 
             url = endpoint + word.lower()
             #url = endpoint + "football"
@@ -195,7 +216,7 @@ class App(object):
                     count = 1
                     prev_char = char
                 if count >= n:
-                    print (word + " -> has 3 or more consecutive identical vowels")
+                    #print (word + " -> has 3 or more consecutive identical vowels")
                     return True
             else:
                 count = 0
